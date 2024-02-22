@@ -1,0 +1,37 @@
+name: Snyk 
+
+on:
+  push:
+    branches: [ "v7.8.1_release" ]
+  pull_request:
+    branches: [ "v7.8.1_release" ]
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  snyk:
+    permissions:
+      contents: read 
+      security-events: write 
+      actions: read 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Snyk to check configuration files for security issues
+        continue-on-error: true
+        uses: snyk/actions/setup@master
+      - name: Snyk test
+        run: snyk code test --json --json-file-output=snyk-report.json
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: list
+        run: ls
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk
+          path: snyk-report.json
